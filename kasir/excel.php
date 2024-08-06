@@ -59,6 +59,7 @@
                     <th style="width:10%;"> Jumlah</th>
                     <th style="width:10%;"> Modal</th>
                     <th style="width:10%;"> Total</th>
+                    <th style="width:10%;"> Metode Pembayaran</th> <!-- Kolom baru -->
                     <th> Kasir</th>
                     <th> Tanggal Input</th>
                 </tr>
@@ -98,6 +99,7 @@
                     <td><?php echo $isi['jumlah'];?> </td>
                     <td>Rp.<?php echo number_format($isi['harga_beli']* $isi['jumlah']);?>,-</td>
                     <td>Rp.<?php echo number_format($isi['total']);?>,-</td>
+                    <td><?php echo $isi['metode_pembayaran'];?></td> <!-- Data baru -->
                     <td><?php echo $isi['nm_member'];?></td>
                     <td><?php echo $isi['tanggal_input'];?></td>
                 </tr>
@@ -109,6 +111,7 @@
                     <td><b><?php echo $jumlah;?></b></td>
                     <td><b>Rp.<?php echo number_format($modal);?>,-</b></td>
                     <td><b>Rp.<?php echo number_format($bayar);?>,-</b></td>
+                    <td></td> <!-- Kolom kosong untuk Metode Pembayaran -->
                     <td><b>Keuntungan</b></td>
                     <td><b>
                         Rp.<?php echo number_format($bayar-$modal);?>,-</b></td>

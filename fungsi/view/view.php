@@ -12,7 +12,7 @@ class view
 
     public function member()
     {
-        $sql = "select member.*, login.*
+        $sql = "select member., login.
                 from member inner join login on member.id_member = login.id_member";
         $row = $this-> db -> prepare($sql);
         $row -> execute();
@@ -22,7 +22,7 @@ class view
 
     public function member_edit($id)
     {
-        $sql = "select member.*, login.*
+        $sql = "select member., login.
                 from member inner join login on member.id_member = login.id_member
                 where member.id_member= ?";
         $row = $this-> db -> prepare($sql);
@@ -203,24 +203,31 @@ class view
         return $hasil;
     }
 
-    public function hari_jual($hari, $metode_pembayaran = '')
+    public function hari_jual($dari_tanggal, $sampai_tanggal, $metode_pembayaran = '')
     {
-        $sql = "SELECT nota.* , barang.id_barang, barang.nama_barang,  barang.harga_beli, member.id_member,
-                member.nm_member from nota 
-                left join barang on barang.id_barang=nota.id_barang 
-                left join member on member.id_member=nota.id_member WHERE nota.tanggal_input LIKE ? ";
+        // Ubah sampai_tanggal menjadi hari berikutnya
+        $sampai_tanggal = date('Y-m-d', strtotime($sampai_tanggal . ' +1 day'));
+
+        $sql = "SELECT nota.*, barang.id_barang, barang.nama_barang, barang.harga_beli, member.id_member,
+                member.nm_member FROM nota 
+                LEFT JOIN barang ON barang.id_barang = nota.id_barang 
+                LEFT JOIN member ON member.id_member = nota.id_member 
+                WHERE nota.tanggal_input >= ? AND nota.tanggal_input < ? ";
+        
         if ($metode_pembayaran != '') {
             $sql .= " AND nota.metode_pembayaran = ?";
         }
+        
         $sql .= " ORDER BY id_nota ASC";
-        $row = $this-> db -> prepare($sql);
+        $row = $this->db->prepare($sql);
+        
         if ($metode_pembayaran != '') {
-            $row -> execute(array("%{$hari}%", $metode_pembayaran));
+            $row->execute(array($dari_tanggal, $sampai_tanggal, $metode_pembayaran));
         } else {
-            $row -> execute(array("%{$hari}%"));
+            $row->execute(array($dari_tanggal, $sampai_tanggal));
         }
-        $hasil = $row -> fetchAll();
-        return $hasil;
+        
+        return $row->fetchAll();
     }
 
     public function penjualan()

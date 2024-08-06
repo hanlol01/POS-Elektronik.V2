@@ -244,11 +244,8 @@ $hasil = $lihat->member_edit($id);
 																Belanjaan Berhasil Di Bayar!
 															</div>
 															<div class="modal-footer">
-																<a href="print.php?nm_member=' . $_SESSION['admin']['nm_member'] . '&bayar=' . $bayar . '&kembali=' . $hitung . '&total=' . $total_bayar . '" target="_blank" class="btn btn-secondary">
+																<a href="print.php?nm_member=' . $_SESSION['admin']['nm_member'] . '&bayar=' . $bayar . '&kembali=' . $hitung . '&total=' . $total_bayar . '" target="_blank" class="btn btn-secondary" id="printButton">
 																	<i class="fa fa-print"></i> Print Untuk Bukti Pembayaran
-																</a>
-																<a href="fungsi/hapus/hapus.php?penjualan=jual" class="btn btn-danger">
-																	<i class="fa fa-refresh"></i> Reset Pembayaran
 																</a>
 															</div>
 														</div>
@@ -257,6 +254,11 @@ $hasil = $lihat->member_edit($id);
 											echo '<script>
 													$(document).ready(function(){
 														$("#successModal").modal("show");
+
+														$("#printButton").on("click", function() {
+															window.open($(this).attr("href"), "_blank");
+															window.location.href = "fungsi/hapus/hapus.php?penjualan=jual";
+														});
 													});
 												</script>';
 										} else {
@@ -301,21 +303,24 @@ $hasil = $lihat->member_edit($id);
 										<?php $no++;
 									} ?>
 									<tr>
-										<td>Total Semua </td>
-										<td><input type="text" class="form-control" name="total"
-												value="<?php echo $total_bayar; ?>"></td>
-
-										<td>Bayar </td>
-										<td>
-											<input type="text" class="form-control" name="bayar"
-												value="<?php echo $bayar; ?>">
-										</td>
-										<td>
+										<td>Metode Pembayaran</td>
+										<td colspan="1">
 											<select class="form-control" name="metode_pembayaran" required>
 												<option value="">Pilih Metode Pembayaran</option>
 												<option value="Cash">Cash</option>
 												<option value="Kode QR">QR Kode</option>
 											</select>
+										</td>
+									</tr>
+									<tr>
+										<td>Total Semua </td>
+										<td><input type="text" class="form-control" name="total"
+												value="<?php echo $total_bayar; ?>" readonly></td>
+
+										<td>Bayar </td>
+										<td>
+											<input type="number" class="form-control" name="bayar"
+												value="<?php echo $bayar; ?>" required>
 										</td>
 										<td>
 											<button class="btn btn-success" id="btnBayar" disabled><i
@@ -326,7 +331,7 @@ $hasil = $lihat->member_edit($id);
 								<!-- aksi ke table nota -->
 								<tr>
 									<td>Kembalian</td>
-									<td><input type="text" class="form-control" value="<?php echo $hitung; ?>"></td>
+									<td><input type="text" class="form-control" id="kembalian" readonly></td>
 									<td></td>
 									<td>
 										<a href="print.php?nm_member=<?php echo $_SESSION['admin']['nm_member']; ?>
@@ -373,7 +378,25 @@ $hasil = $lihat->member_edit($id);
 				// Mengaktifkan/menonaktifkan tombol bayar berdasarkan input bayar
 				$('input[name="bayar"]').on('input', function () {
 					var bayarValue = $(this).val();
+					var totalValue = $('input[name="total"]').val();
+					var kembalian = bayarValue - totalValue;
+					$('#kembalian').val(kembalian);
 					$('#btnBayar').prop('disabled', !bayarValue); // Nonaktifkan jika kosong
+				});
+
+				// Event listener untuk metode pembayaran
+				$('select[name="metode_pembayaran"]').on('change', function () {
+					var metode = $(this).val();
+					var totalValue = $('input[name="total"]').val();
+					if (metode === 'Kode QR') {
+						$('input[name="bayar"]').val(totalValue).prop('readonly', true);
+						$('#kembalian').val(0);
+						$('#btnBayar').prop('disabled', false);
+					} else {
+						$('input[name="bayar"]').val('').prop('readonly', false);
+						$('#kembalian').val('');
+						$('#btnBayar').prop('disabled', true);
+					}
 				});
 			});
 		</script>
