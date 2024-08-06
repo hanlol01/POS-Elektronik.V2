@@ -66,7 +66,7 @@
 								<?php }else{?>
 								<a href="excel.php" class="btn btn-info"><i class="fa fa-download"></i>
 									Excel</a>
-								<?php }?>
+								<?php }?>	
 							</td>
 						</tr>
 					</table>
@@ -82,7 +82,8 @@
 					<table class="table table-bordered w-100 table-sm" id="example1">
 						<thead>
 							<tr style="background:#DFF0D8;color:#333;">
-								<th> No</th>
+								<th > No</th>
+								<th> Kode Transaksi</th>
 								<th> ID Barang</th>
 								<th> Nama Barang</th>
 								<th style="width:10%;"> Jumlah</th>
@@ -96,7 +97,8 @@
 						</thead>
 						<tbody id="tableBody">
 							<?php 
-								$no=1; 
+								$no=1	; 
+								$kodeTransaksiTampil = []; // Array untuk menyimpan kode transaksi yang sudah ditampilkan
 								if(!empty($_GET['hari'])){
 									$dari_tanggal = $_POST['dari_tanggal'];
 									$sampai_tanggal = $_POST['sampai_tanggal'];
@@ -109,6 +111,9 @@
 									} else {
 										$hasil = $lihat->hari_jual($dari_tanggal, $sampai_tanggal, $metode_pembayaran);
 									}
+									usort($hasil, function($a, $b) {
+										return $a['kode_transaksi'] <=> $b['kode_transaksi'];
+									});
 								}else{
 									$hasil = $lihat->jual();
 								}
@@ -118,12 +123,20 @@
 								$jumlah = 0;
 								$modal = 0;
 								foreach($hasil as $isi){ 
-									$bayar += $isi['total'];
+									// Cek apakah kode transaksi sudah ditampilkan
+									if (!in_array($isi['kode_transaksi'], $kodeTransaksiTampil)) {
+										$kodeTransaksiTampil[] = $isi['kode_transaksi']; // Tambahkan kode transaksi ke array
+										$kodeTransaksi = $isi['kode_transaksi']; // Simpan kode transaksi untuk ditampilkan
+									} else {
+										$kodeTransaksi = ''; // Kosongkan jika sudah ditampilkan
+									}
+									$bayar += $isi['total']; 	
 									$modal += $isi['harga_beli']* $isi['jumlah'];
 									$jumlah += $isi['jumlah'];
 							?>
 							<tr class="payment-row" data-payment-method="<?php echo $isi['metode_pembayaran']; ?>">
-								<td><?php echo $no;?></td>
+								<td "><?php echo $no;?></td>
+								<td><?php echo $kodeTransaksi;?></td> <!-- Hanya menampilkan kode transaksi yang unik -->
 								<td><?php echo $isi['id_barang'];?></td>
 								<td><?php echo $isi['nama_barang'];?></td>
 								<td><?php echo $isi['jumlah'];?> </td>
@@ -137,7 +150,7 @@
 									<button onclick="openDeleteConfirmModal('<?php echo $isi['id_nota'];?>')" class="btn btn-danger btn-sm">Hapus</button>
 								</td>
 							</tr>
-							<?php $no++; }?>
+							<?php $no++; } ?>
 						</tbody>
 						<tfoot id="tableFooter">
 							<tr>
@@ -311,4 +324,5 @@ function openDeleteConfirmModal(idNota) {
         }
     };
 }
+
 </script>

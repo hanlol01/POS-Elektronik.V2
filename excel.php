@@ -54,6 +54,7 @@
             <thead>
                 <tr bgcolor="yellow">
                     <th> No</th>
+                    <th> Kode Transaksi</th>
                     <th> ID Barang</th>
                     <th> Nama Barang</th>
                     <th style="width:10%;"> Jumlah</th>
@@ -94,12 +95,13 @@
                 ?>
                 <tr>
                     <td><?php echo $no;?></td>
+                    <td><?php echo $isi['kode_transaksi'];?></td>
                     <td><?php echo $isi['id_barang'];?></td>
                     <td><?php echo $isi['nama_barang'];?></td>
                     <td><?php echo $isi['jumlah'];?> </td>
                     <td>Rp.<?php echo number_format($isi['harga_beli']* $isi['jumlah']);?>,-</td>
                     <td>Rp.<?php echo number_format($isi['total']);?>,-</td>
-                    <td><?php echo $isi['metode_pembayaran'];?></td> <!-- Data baru -->
+                    <td><?php echo $isi['metode_pembayaran'];?></td>
                     <td><?php echo $isi['nm_member'];?></td>
                     <td><?php echo $isi['tanggal_input'];?></td>
                 </tr>

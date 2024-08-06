@@ -135,6 +135,23 @@ $hasil = $lihat->member_edit($id);
 								<td><input type="text" readonly="readonly" class="form-control"
 										value="<?php echo date("j F Y, G:i"); ?>" name="tgl"></td>
 							</tr>
+							<td>Kode Transaksi</td>
+							<td colspan="1">
+								<?php
+								$tanggal = date('dmY');
+								$sql_kode = "SELECT MAX(kode_transaksi) AS max_kode FROM nota WHERE kode_transaksi LIKE 'TRX-$tanggal-%'";
+								$result_kode = $config->prepare($sql_kode);
+								$result_kode->execute();
+								$data_kode = $result_kode->fetch(PDO::FETCH_ASSOC);
+								$max_kode = $data_kode['max_kode'];
+								$no_urut = (int) substr($max_kode, -3);
+								$no_urut++;
+								$kode_transaksi = "TRX-$tanggal-" . sprintf("%03s", $no_urut);
+								?>
+								<input type="text" class="form-control" name="kode_transaksi"
+									value="<?php echo $kode_transaksi; ?>" readonly>
+							</td>
+							</tr>
 						</table>
 						<table class="table table-bordered w-100" id="example1">
 							<thead>
@@ -201,6 +218,7 @@ $hasil = $lihat->member_edit($id);
 								if (!empty($_GET['nota'] == 'yes')) {
 									$total = $_POST['total'];
 									$bayar = $_POST['bayar'];
+									$kode_transaksi = $_POST['kode_transaksi']; // Ambil kode transaksi dari form
 									if (!empty($bayar)) {
 										$hitung = $bayar - $total;
 										if ($bayar >= $total) {
@@ -214,8 +232,8 @@ $hasil = $lihat->member_edit($id);
 
 											for ($x = 0; $x < $jumlah_dipilih; $x++) {
 
-												$d = array($id_barang[$x], $id_member[$x], $jumlah[$x], $total[$x], $tgl_input[$x], $periode[$x], $_POST['metode_pembayaran']);
-												$sql = "INSERT INTO nota (id_barang,id_member,jumlah,total,tanggal_input,periode,metode_pembayaran) VALUES(?,?,?,?,?,?,?)";
+												$d = array($id_barang[$x], $id_member[$x], $jumlah[$x], $total[$x], $tgl_input[$x], $periode[$x], $_POST['metode_pembayaran'], $kode_transaksi);
+												$sql = "INSERT INTO nota (id_barang,id_member,jumlah,total,tanggal_input,periode,metode_pembayaran,kode_transaksi) VALUES(?,?,?,?,?,?,?,?)";
 												$row = $config->prepare($sql);
 												$row->execute($d);
 
@@ -234,6 +252,11 @@ $hasil = $lihat->member_edit($id);
 												$row_stok = $config->prepare($sql_stok);
 												$row_stok->execute(array($total_stok, $idb));
 											}
+											// Simpan kode transaksi ke dalam tabel nota
+											$sql_kode_transaksi = "INSERT INTO nota (kode_transaksi) VALUES (?)";
+											$row_kode_transaksi = $config->prepare($sql_kode_transaksi);
+											$row_kode_transaksi->execute(array($kode_transaksi));
+
 											echo '<div class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-labelledby="successModalLabel" aria-hidden="true">
 													<div class="modal-dialog" role="document">
 														<div class="modal-content">
@@ -302,6 +325,9 @@ $hasil = $lihat->member_edit($id);
 										<input type="hidden" name="periode[]" value="<?php echo date('m-Y'); ?>">
 										<?php $no++;
 									} ?>
+									<input type="hidden" name="kode_transaksi" value="<?php echo $kode_transaksi; ?>">
+
+
 									<tr>
 										<td>Metode Pembayaran</td>
 										<td colspan="1">
@@ -374,6 +400,24 @@ $hasil = $lihat->member_edit($id);
 		</script>
 
 		<script>
+			// ... existing code ...
+			$('select[name="metode_pembayaran"]').on('change', function () {
+				var metode = $(this).val();
+				var totalValue = $('input[name="total"]').val();
+				if (metode === 'Kode QR') {
+					$('input[name="bayar"]').val(totalValue).prop('readonly', true);
+					$('#kembalian').val(0);
+					$('#btnBayar').prop('disabled', false);
+				} else {
+					$('input[name="bayar"]').val('').prop('readonly', false);
+					$('#kembalian').val('');
+					$('#btnBayar').prop('disabled', true);
+					if (metode === 'Cash') { // Tambahkan kondisi ini
+						$('input[name="bayar"]').focus(); // Fokus ke input bayar
+					}
+				}
+			});
+			// ... existing code ...	
 			$(document).ready(function () {
 				// Mengaktifkan/menonaktifkan tombol bayar berdasarkan input bayar
 				$('input[name="bayar"]').on('input', function () {

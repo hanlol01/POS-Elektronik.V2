@@ -12,22 +12,24 @@ class view
 
     public function member()
     {
-        $sql = "select member., login.
-                from member inner join login on member.id_member = login.id_member";
-        $row = $this-> db -> prepare($sql);
-        $row -> execute();
-        $hasil = $row -> fetchAll();
+        $sql = "SELECT member.*, login.*
+                FROM member 
+                INNER JOIN login ON member.id_member = login.id_member";
+        $row = $this->db->prepare($sql);
+        $row->execute();
+        $hasil = $row->fetchAll();
         return $hasil;
     }
 
     public function member_edit($id)
     {
-        $sql = "select member., login.
-                from member inner join login on member.id_member = login.id_member
-                where member.id_member= ?";
-        $row = $this-> db -> prepare($sql);
-        $row -> execute(array($id));
-        $hasil = $row -> fetch();
+        $sql = "SELECT member.*, login.*
+                FROM member 
+                INNER JOIN login ON member.id_member = login.id_member
+                WHERE member.id_member = ?";
+        $row = $this->db->prepare($sql);
+        $row->execute(array($id));
+        $hasil = $row->fetch();
         return $hasil;
     }
 
@@ -85,12 +87,13 @@ class view
 
     public function barang_cari($cari)
     {
-        $sql = "select barang.*, kategori.id_kategori, kategori.nama_kategori
-                from barang inner join kategori on barang.id_kategori = kategori.id_kategori
-                where id_barang like '%$cari%' or nama_barang like '%$cari%' or merk like '%$cari%'";
-        $row = $this-> db -> prepare($sql);
-        $row -> execute();
-        $hasil = $row -> fetchAll();
+        $sql = "SELECT barang.*, kategori.id_kategori, kategori.nama_kategori
+                FROM barang 
+                INNER JOIN kategori ON barang.id_kategori = kategori.id_kategori
+                WHERE id_barang LIKE ? OR nama_barang LIKE ? OR merk LIKE ?";
+        $row = $this->db->prepare($sql);
+        $row->execute(array("%$cari%", "%$cari%", "%$cari%"));
+        $hasil = $row->fetchAll();
         return $hasil;
     }
 
@@ -276,36 +279,31 @@ class view
         return $result->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function hapus_laporan_jual($id){
-        // Mulai transaksi
+    public function hapus_laporan_jual($id)
+    {
         $this->db->beginTransaction();
         
         try {
-            // Ambil data nota sebelum dihapus
             $sql_select = "SELECT id_barang, jumlah FROM nota WHERE id_nota = ?";
             $result_select = $this->db->prepare($sql_select);
             $result_select->execute(array($id));
             $nota = $result_select->fetch(PDO::FETCH_ASSOC);
             
             if ($nota) {
-                // Update stok barang
                 $sql_update = "UPDATE barang SET stok = stok + ? WHERE id_barang = ?";
                 $result_update = $this->db->prepare($sql_update);
                 $result_update->execute(array($nota['jumlah'], $nota['id_barang']));
                 
-                // Hapus nota
                 $sql_delete = "DELETE FROM nota WHERE id_nota = ?";
                 $result_delete = $this->db->prepare($sql_delete);
                 $result_delete->execute(array($id));
                 
-                // Commit transaksi
                 $this->db->commit();
                 return true;
             } else {
                 throw new Exception("Nota tidak ditemukan");
             }
         } catch (Exception $e) {
-            // Rollback jika terjadi error
             $this->db->rollBack();
             error_log($e->getMessage());
             return false;
@@ -316,12 +314,10 @@ class view
         $this->db->beginTransaction();
 
         try {
-            // Update nota
             $sql_update_nota = "UPDATE nota SET jumlah = ? WHERE id_nota = ?";
             $result_update_nota = $this->db->prepare($sql_update_nota);
             $result_update_nota->execute(array($jumlah_baru, $id));
 
-            // Update stok barang
             $selisih = $jumlah_lama - $jumlah_baru;
             $sql_update_barang = "UPDATE barang SET stok = stok + ? WHERE id_barang = ?";
             $result_update_barang = $this->db->prepare($sql_update_barang);
